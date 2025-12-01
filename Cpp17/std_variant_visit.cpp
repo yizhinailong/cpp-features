@@ -1,9 +1,10 @@
+#include <functional>
 #include <iostream>
 #include <string>
 #include <variant>
 #include <vector>
 
-static void std_variant_visit_if_constexpr() {
+void std_variant_visit_if_constexpr() {
     std::variant<int, double> var_1{ 10 };
     std::variant<int, double> var_2{ 20.5 };
 
@@ -28,7 +29,7 @@ struct overloaded : Ts... {
 template <typename... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
-static void std_variant_visit_overloaded() {
+void std_variant_visit_overloaded() {
     std::vector<std::variant<int, double, std::string>> vars{ 1, 2.5, 3, 4.0, "Hello", "World" };
 
     auto visitor = overloaded{
@@ -48,6 +49,28 @@ static void std_variant_visit_overloaded() {
     }
 }
 
+using CallBack1 = std::function<void(int)>;
+using CallBack2 = std::function<void(std::string)>;
+using CallBack3 = std::function<int(int, int)>;
+
+using CallBack = std::variant<CallBack1, CallBack2, CallBack3>;
+
+void std_variant_visit_callback(CallBack cb) {
+    auto visitor = [](auto&& arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, CallBack1>) {
+            arg(18);
+        } else if constexpr (std::is_same_v<T, CallBack2>) {
+            arg("Callback with string argument");
+        } else if constexpr (std::is_same_v<T, CallBack3>) {
+            int result = arg(10, 100);
+            std::cout << "Callback with int argumnet returned: " << result << std::endl;
+        }
+    };
+
+    std::visit(visitor, cb);
+}
+
 int main() {
 
     std::cout << "std_variant_visit_if_constexpr: " << std::endl;
@@ -56,6 +79,21 @@ int main() {
 
     std::cout << "std_variant_visit_overloaded: " << std::endl;
     std_variant_visit_overloaded();
+    std::cout << std::endl;
+
+    std::cout << "std_variant_visit_callback: " << std::endl;
+    auto cb1 = [](int x) {
+        std::cout << "Callback1 called" << std::endl;
+    };
+    auto cb2 = [](std::string s) {
+        std::cout << "Callback2 called with " << s << std::endl;
+    };
+    auto cb3 = [](int a, int b) {
+        return a + b;
+    };
+    std_variant_visit_callback(CallBack1{ cb1 });
+    std_variant_visit_callback(CallBack2{ cb2 });
+    std_variant_visit_callback(CallBack3{ cb3 });
     std::cout << std::endl;
 
     return 0;
