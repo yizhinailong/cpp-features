@@ -7,7 +7,6 @@ function create_targets_for_cpp_files(directory, cpp_standard)
             set_kind("binary")
             set_languages(cpp_standard)
             add_files(directory .. "/" .. name .. ".cpp")
-            add_links("stdc++exp")
     end
 end
 
