@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <ranges>
 #include <vector>
@@ -13,9 +14,9 @@ int main() {
                    return n * 2;
                });
 
-    for (auto n : res) {
+    std::ranges::for_each(res, [](int n) {
         std::cout << n << ' ';
-    }
+    });
 
     return 0;
 }
